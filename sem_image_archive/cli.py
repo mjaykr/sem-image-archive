@@ -136,6 +136,12 @@ def build_parser() -> argparse.ArgumentParser:
         action="store_true",
         help="Allow replacing existing converted TIFFs and archives.",
     )
+    parser.add_argument(
+        "--del",
+        dest="delete_sources",
+        action="store_true",
+        help="Delete source TIFFs only after conversion and archive verification succeed.",
+    )
     return parser
 
 
@@ -159,6 +165,7 @@ def main(argv: list[str] | None = None) -> int:
         print(f"Error: archive already exists; use --overwrite: {archive_path}", file=sys.stderr)
         return 2
 
+    input_bytes = sum(path.stat().st_size for path in images)
     output_dir.mkdir(parents=True, exist_ok=True)
     converted = 0
     luminance_converted = 0
@@ -184,7 +191,11 @@ def main(argv: list[str] | None = None) -> int:
         print(f"Error: {error}", file=sys.stderr)
         return 1
 
-    input_bytes = sum(path.stat().st_size for path in images)
+    if args.delete_sources:
+        for source in images:
+            source.unlink()
+        print(f"Deleted:  {len(images)} source TIFFs")
+
     archive_bytes = archive_path.stat().st_size
     ratio = archive_bytes / input_bytes if input_bytes else 0
     print(f"\nConverted: {converted} TIFFs")

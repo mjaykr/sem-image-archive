@@ -85,6 +85,16 @@ By default, the program:
 
 Existing outputs are protected. Use `--overwrite` only when replacement is intentional.
 
+To delete the original TIFFs after the converted files have been archived and
+the archive has passed its integrity test, add `--del`:
+
+```powershell
+sem-archive --del -i "G:\SEM\Zr doped"
+```
+
+Without `--del`, source files are always retained. If conversion or archive
+verification fails, source files are never deleted.
+
 ## Image handling
 
 RGB images with identical channels are converted directly to grayscale. If an RGB image has unequal channels, Pillow's luminance conversion is used and a warning is printed. To stop instead of converting such an image, use:
@@ -104,6 +114,7 @@ The output TIFFs use 8-bit `L` mode and Deflate compression. The archive uses so
 | `-a`, `--archive` | Output `.7z` path |
 | `--reject-color` | Stop on unequal RGB channels |
 | `--overwrite` | Replace existing converted TIFFs and archive |
+| `--del` | Delete source TIFFs after successful archive verification |
 | `-h`, `--help` | Show command help |
 
 ## Development
