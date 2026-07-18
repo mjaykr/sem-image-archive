@@ -66,3 +66,46 @@ def test_del_keeps_sources_when_archive_fails(tmp_path: Path, monkeypatch):
 
     assert result == 1
     assert source.exists()
+
+
+def test_7z_only_leaves_only_archive(tmp_path: Path, monkeypatch):
+    source = tmp_path / "source.tif"
+    output_dir = tmp_path / "output"
+    archive = tmp_path / "images.7z"
+    Image.new("RGB", (2, 2), (7, 7, 7)).save(source)
+
+    def fake_archive(_output_dir, archive_path):
+        archive_path.write_bytes(b"verified archive")
+        return "7z"
+
+    monkeypatch.setattr(cli, "create_archive", fake_archive)
+
+    result = cli.main(
+        ["-i", str(tmp_path), "-o", str(output_dir), "-a", str(archive), "--7z-only"]
+    )
+
+    assert result == 0
+    assert archive.exists()
+    assert not source.exists()
+    assert not output_dir.exists()
+
+
+def test_7z_only_rejects_archive_inside_output(tmp_path: Path):
+    source = tmp_path / "source.tif"
+    output_dir = tmp_path / "output"
+    Image.new("RGB", (2, 2), (7, 7, 7)).save(source)
+
+    result = cli.main(
+        [
+            "-i",
+            str(tmp_path),
+            "-o",
+            str(output_dir),
+            "-a",
+            str(output_dir / "images.7z"),
+            "--7z-only",
+        ]
+    )
+
+    assert result == 2
+    assert source.exists()

@@ -95,6 +95,17 @@ sem-archive --del -i "G:\SEM\Zr doped"
 Without `--del`, source files are always retained. If conversion or archive
 verification fails, source files are never deleted.
 
+For maximum space savings, use `--7z-only` (or `--7z`). After the archive is
+verified, it deletes the original TIFFs and removes the entire grayscale output
+folder, leaving only the `.7z` file:
+
+```powershell
+sem-archive --7z-only -i "G:\SEM\Zr doped"
+```
+
+The archive must be outside the output folder when using this mode. Do not use
+this option if the output folder contains files you need to keep.
+
 ## Image handling
 
 RGB images with identical channels are converted directly to grayscale. If an RGB image has unequal channels, Pillow's luminance conversion is used and a warning is printed. To stop instead of converting such an image, use:
@@ -115,6 +126,7 @@ The output TIFFs use 8-bit `L` mode and Deflate compression. The archive uses so
 | `--reject-color` | Stop on unequal RGB channels |
 | `--overwrite` | Replace existing converted TIFFs and archive |
 | `--del` | Delete source TIFFs after successful archive verification |
+| `--7z-only`, `--7z` | Delete sources and the grayscale output folder after verification |
 | `-h`, `--help` | Show command help |
 
 ## Development

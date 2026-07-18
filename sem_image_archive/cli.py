@@ -71,6 +71,8 @@ def create_archive(output_dir: Path, archive_path: Path) -> str:
     files = sorted(output_dir.glob("*.tif")) + sorted(output_dir.glob("*.tiff"))
     if not files:
         raise RuntimeError(f"No converted TIFF files found in {output_dir}")
+    if archive_path.exists():
+        archive_path.unlink()
 
     command = [
         executable,
@@ -142,6 +144,13 @@ def build_parser() -> argparse.ArgumentParser:
         action="store_true",
         help="Delete source TIFFs only after conversion and archive verification succeed.",
     )
+    parser.add_argument(
+        "--7z-only",
+        "--7z",
+        dest="archive_only",
+        action="store_true",
+        help="After verification, delete sources and remove the grayscale output folder, leaving only the .7z.",
+    )
     return parser
 
 
@@ -157,6 +166,17 @@ def main(argv: list[str] | None = None) -> int:
         args.archive
         or input_dir / f"{input_dir.name}_grayscale_8bit.7z"
     ).expanduser().resolve()
+    if args.archive_only:
+        if output_dir == input_dir:
+            print("Error: --7z-only cannot remove the input folder.", file=sys.stderr)
+            return 2
+        try:
+            archive_path.relative_to(output_dir)
+        except ValueError:
+            pass
+        else:
+            print("Error: --7z-only archive must be outside the output folder.", file=sys.stderr)
+            return 2
     images = find_images(input_dir)
     if not images:
         print(f"Error: no TIFF files found in {input_dir}", file=sys.stderr)
@@ -191,10 +211,14 @@ def main(argv: list[str] | None = None) -> int:
         print(f"Error: {error}", file=sys.stderr)
         return 1
 
-    if args.delete_sources:
+    if args.delete_sources or args.archive_only:
         for source in images:
             source.unlink()
         print(f"Deleted:  {len(images)} source TIFFs")
+
+    if args.archive_only:
+        shutil.rmtree(output_dir)
+        print(f"Removed:   {output_dir}")
 
     archive_bytes = archive_path.stat().st_size
     ratio = archive_bytes / input_bytes if input_bytes else 0
