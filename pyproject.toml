@@ -1,0 +1,19 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "sem-image-archive"
+version = "0.1.0"
+description = "Convert visually grayscale SEM TIFFs to 8-bit grayscale and archive them with 7-Zip"
+readme = "README.md"
+requires-python = ">=3.9"
+license = { file = "LICENSE" }
+authors = [{ name = "Mirtunjay Kumar" }]
+dependencies = ["Pillow>=10.0"]
+
+[project.scripts]
+sem-archive = "sem_image_archive.cli:main"
+
+[tool.setuptools.packages.find]
+include = ["sem_image_archive*"]
